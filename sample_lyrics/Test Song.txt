@@ -1,0 +1,14 @@
+Welcome to the lyrics display system
+This is line number two
+Here's the third line of text
+And this is line four
+
+You can have empty lines between verses
+They will be skipped automatically
+This helps organize your lyrics
+Into logical sections
+
+This is the final verse
+Thank you for using this plugin
+Enjoy your streaming experience
+With professional lyrics display

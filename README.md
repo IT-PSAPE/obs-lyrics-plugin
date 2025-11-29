@@ -1,103 +1,173 @@
 # OBS Lyrics Plugin
 
-A powerful OBS Studio plugin for displaying lyrics and presentations with full customization options. Available in both Lua (no dependencies) and Python (with dock UI) versions! This source allows you to display lyrics from text files over a background image, with advanced control over navigation and text styling.
+A comprehensive lyrics display system for OBS Studio that allows you to display song lyrics with customizable backgrounds and text styling.
 
 ## Features
 
-- **Folder-based Song Management**: Load all songs from a folder - each `.txt` file is a separate song
-- **Line-by-Line Display**: Each line in the text file is displayed as a separate slide
-- **Background Images**: Display custom background images behind your lyrics
-- **Full Text Customization**:
-    - **Font Selection**: Choose font face, size, and style
-    - **Text Color**: Full color picker for text
-    - **Text Outline/Border**: Enable outline with customizable color and thickness
-    - **Drop Shadow**: Add shadows with adjustable opacity, offset, and color
-- **Text Box System**: 
-    - Adjustable width and height
-    - Alignment-based positioning (no manual offsets)
-    - Visual bounds indicator for easy setup
-- **Playback Controls**: 
-    - Navigate between lyrics (Previous/Next Lyric)
-    - Stop/Clear current display
-    - Python version includes dock widget
-
-## Choose Your Version
-
-### Lua Version (Recommended for simplicity)
-- **Location**: `lua_version/` folder
-- **Pros**: No dependencies, works immediately
-- **Features**: All core features, external control script
-
-### Python Version (Recommended for dock UI)
-- **Location**: `python_version/` folder
-- **Pros**: Dock widget UI next to Properties panel
-- **Requires**: Python 3.6+ with PyQt5
+- **Background Image Support**: Load any image as a background for your lyrics
+- **Folder-based Lyrics Management**: Organize your songs as individual .txt files in a folder
+- **Customizable Text Positioning**: 
+  - Horizontal alignment (left, center, right)
+  - Vertical alignment (top, center, bottom)
+  - Custom width and height for text box
+  - X/Y offset for fine-tuning position
+- **Text Styling Options**:
+  - Font family selection
+  - Font size adjustment
+  - Text color customization
+  - Outline size and color
+- **Playback Controls**:
+  - Next/Previous line navigation
+  - Hide/Show lyrics toggle
+  - Song selection
+- **Multiple Control Interfaces**:
+  - Control dock window
+  - Source toolbar integration
+  - Hotkey support
 
 ## Installation
 
-### For Lua Version:
-1. Go to Tools → Scripts
-2. Add `lua_version/lyrics_plugin.lua`
-3. (Optional) Add `lua_version/lyrics_controls.lua`
+1. **Prerequisites**:
+   - OBS Studio (version 27.0 or higher)
+   - Python 3.6+ (must match OBS Python version)
+   - PyQt5 (for control dock)
 
-### For Python Version:
-1. Ensure OBS has Python support
-2. Go to Tools → Scripts
-3. Add `python_version/lyrics_plugin_main.py`
-4. The dock widget appears automatically
+2. **Install the Plugin**:
+   - Copy all `.py` files to your OBS scripts folder
+   - In OBS, go to Tools → Scripts
+   - Click the "+" button and add `obs_lyrics_plugin.py`
+   - Optionally add `lyrics_control_dock.py` for the control panel
+   - Optionally add `lyrics_source_toolbar.py` for toolbar integration
 
 ## Usage
 
-1. **Add the Source**:
-    - In OBS, click the `+` button in the Sources panel.
-    - Select `Lyrics Overlay` from the list.
-    - Name your source and click OK.
+### Initial Setup
 
-2. **Configure Properties**:
-    - **Background Image**: (Optional) Select an image to display behind the lyrics.
-    - **Songs Folder**: Select a folder containing your `.txt` song files.
-    - **Current Song**: Choose which song to display from the dropdown.
-    - **Text Box**: Set width and height of the text area.
-    - **Text Position**: Choose alignment (left/center/right, top/center/bottom).
-    - **Text Appearance**: Customize font, size, style, and color.
-    - **Text Effects**: Enable and configure outline and shadow effects.
+1. **Create a Lyrics Folder Structure**:
+   ```
+   lyrics/
+   ├── Song1.txt
+   ├── Song2.txt
+   └── Song3.txt
+   ```
+   
+   Each .txt file should contain lyrics with one line per slide:
+   ```
+   First line of the song
+   Second line of the song
+   Third line of the song
+   ```
 
-3. **Control Playback**:
-    - **In Properties**: Use the quick control buttons
-        - **◀ Previous Lyric**: Go to the previous line
-        - **■ Stop/Clear**: Clear the current display
-        - **▶ Next Lyric**: Advance to the next line
-    - **External Control Panel**: Use the separate control script
-        - Song selection dropdown
-        - Playback control buttons
-        - Configurable hotkeys
+2. **Configure the Plugin**:
+   - In OBS Scripts, select the lyrics plugin
+   - Set the following properties:
+     - **Background Image**: Select your background image file
+     - **Lyrics Folder**: Select the folder containing your .txt files
+     - **Source Name**: Name for the text source (default: "Lyrics Display")
+
+3. **Create a Scene**:
+   - Create a new scene in OBS
+   - The plugin will automatically create the background and text sources
+   - Or manually add a Text (GDI+) source with the name you specified
+
+### Text Positioning
+
+- **Horizontal Alignment**: Choose left, center, or right
+- **Vertical Alignment**: Choose top, center, or bottom
+- **Text Box Width/Height**: Set the dimensions of the text area
+- **X/Y Offset**: Fine-tune the position with pixel offsets
+
+### Text Styling
+
+- **Font**: Select from available system fonts
+- **Font Size**: Adjust text size (10-200)
+- **Font Color**: Choose text color
+- **Outline Size**: Set outline thickness (0-20)
+- **Outline Color**: Choose outline color
+
+### Controls
+
+#### Control Dock
+If you've added `lyrics_control_dock.py`:
+- A "Lyrics Control" dock will appear in OBS
+- Select songs from the dropdown
+- Use Previous/Next buttons to navigate lines
+- Toggle visibility with Hide/Show button
+- Refresh song list after adding new files
+
+#### Hotkeys
+The plugin registers these hotkeys (set in OBS Settings → Hotkeys):
+- **Lyrics: Next Line**: Move to next lyric line
+- **Lyrics: Previous Line**: Move to previous line
+- **Lyrics: Toggle Visibility**: Show/hide lyrics
+
+#### Source Toolbar
+If you've added `lyrics_source_toolbar.py`:
+- Right-click on the lyrics text source
+- Access lyrics controls from the context menu
 
 ## File Format
 
-- Create a folder for your songs/presentations
-- Each `.txt` file in the folder is treated as a separate song or presentation
-- Each line in the text file is displayed as a separate slide
-- Empty lines will display as blank slides
-- UTF-8 encoding is supported for international characters
+### Lyrics Files (.txt)
+- UTF-8 encoded text files
+- One line per slide
+- Empty lines are skipped
+- File name becomes the song name (without .txt extension)
 
-### Example File Structure:
+Example `Amazing Grace.txt`:
 ```
-songs_folder/
-├── Amazing_Grace.txt
-├── Test_Song.txt
-└── Demo_Presentation.txt
-```
-
-### Example Song File (Amazing_Grace.txt):
-```
-Amazing Grace, how sweet the sound
+Amazing grace, how sweet the sound
 That saved a wretch like me
-I once was lost but now am found
+I once was lost, but now am found
 Was blind, but now I see
 ```
 
+## Tips
+
+1. **Background Images**: Use high-resolution images that match your stream resolution
+2. **Text Contrast**: Use outline to ensure text is readable on any background
+3. **Font Selection**: Choose clear, readable fonts for streaming
+4. **Organization**: Name your files clearly (e.g., "01 - Song Title.txt" for ordering)
+5. **Testing**: Test your setup before going live to ensure smooth operation
+
 ## Troubleshooting
 
-- **Text not appearing?** Ensure "Stop/Clear" wasn't clicked. Try clicking "Next Lyric" to advance to the first line.
-- **Songs not showing in dropdown?** Make sure you've selected a valid folder containing .txt files, then click away and back to refresh.
-- **Plugin not loading?** Check the OBS Script Log (Tools → Scripts → Script Log button) for any Lua errors.
+### Text Not Showing
+- Ensure the source name in settings matches your text source
+- Check that the lyrics folder path is correct
+- Verify .txt files are properly formatted
+
+### Control Dock Not Appearing
+- Make sure PyQt5 is installed
+- Check OBS logs for any Python errors
+- Try restarting OBS after adding the script
+
+### Hotkeys Not Working
+- Set up hotkeys in OBS Settings → Hotkeys
+- Look for "Lyrics: Next Line", etc.
+- Assign your preferred key combinations
+
+## Advanced Usage
+
+### Multiple Lyrics Displays
+You can create multiple instances by:
+1. Duplicating the script files with different names
+2. Using different source names for each instance
+3. Managing separate lyrics folders
+
+### Custom Styling
+For advanced styling beyond the plugin options:
+1. Create the text source manually
+2. Apply OBS filters (color correction, etc.)
+3. Use the plugin just for content management
+
+## License
+
+This plugin is provided as-is for use with OBS Studio. Feel free to modify and distribute according to your needs.
+
+## Support
+
+For issues or feature requests, please check:
+- OBS logs (Help → Log Files → View Current Log)
+- Python script output in the Scripts window
+- Ensure all dependencies are properly installed
