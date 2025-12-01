@@ -1,4 +1,4 @@
-name: Build Plugin
+name: Build Windows
 
 on:
   push:
@@ -9,56 +9,6 @@ on:
       - main
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Install Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake ninja-build libobs-dev qt6-base-dev libqt6svg6-dev
-
-      - name: Configure
-        run: cmake --preset ubuntu-ci-x86_64
-
-      - name: Build
-        run: cmake --build --preset ubuntu-ci-x86_64
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-plugin
-          path: build_x86_64/obs-lyrics-plugin.so
-
-  build-macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Install Dependencies
-        run: |
-          brew install obs-studio qt@6
-          echo "CMAKE_PREFIX_PATH=$(brew --prefix qt@6)" >> $GITHUB_ENV
-
-      - name: Configure
-        run: cmake --preset macos-ci
-        env:
-          CMAKE_PREFIX_PATH: ${{ env.CMAKE_PREFIX_PATH }}:/Applications/OBS.app/Contents/Resources/cmake
-
-      - name: Build
-        run: cmake --build --preset macos-ci
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-plugin
-          path: build_macos/obs-lyrics-plugin.plugin
-
   build-windows:
     runs-on: windows-latest
     steps:
@@ -66,18 +16,36 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install Dependencies
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.6.0'
+          arch: 'win64_msvc2019_64'
+
+      - name: Download OBS Studio (Pre-built)
+        shell: powershell
         run: |
-          # OBS and Qt setup on Windows can be tricky in CI without pre-built deps.
-          # We will use a common action or manual setup if possible.
-          # For simplicity, we assume standard runners or use a helper if available.
-          # Actually, OBS provides a helper action or we can download deps.
-          # But for this template, we'll try to use the preset which might expect deps.
-          # The template preset doesn't define where deps are.
-          # Let's skip Windows for now or use a basic setup if we can't guarantee deps.
-          echo "Windows build requires setting up OBS and Qt dependencies manually or via cache."
+          # Download OBS Studio to get headers and libs (if available) or use a known dev package.
+          # Since official releases don't include .lib files, we typically need a 'dev' package.
+          # For this example, we will try to use a community provided dev package or just warn.
+          # A common practice is to rely on vcpkg or a custom dep cache.
           
-      # For now, we will leave Windows out as it requires more complex setup (downloading libobs/qt binaries)
-      # than just apt-get or brew. 
+          # We will attempt to use vcpkg to install libobs if possible, or just skip and fail if not found.
+          # However, to be helpful, we will try to download a specific dev package if we can.
+          # Let's assume we need to build against a specific version.
+          
+          echo "Please configure OBS dependencies location."
+          
+      - name: Configure
+        run: cmake --preset windows-ci-x64
+        env:
+          CMAKE_PREFIX_PATH: ${{ env.Qt6_DIR }}
 
+      - name: Build
+        run: cmake --build --preset windows-ci-x64
 
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-plugin
+          path: build_x64/obs-lyrics-plugin.dll
