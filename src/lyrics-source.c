@@ -40,8 +40,8 @@ struct lyrics_source {
 	obs_source_t *text_source; /* We will use a child text source for easier rendering */
 	
 	/* Lyrics Data */
-	struct dstr_array files;
-	struct dstr_array current_lyrics;
+	dstr_array files;
+	dstr_array current_lyrics;
 	int current_file_index;
 	int current_line_index;
 	bool visible;
@@ -93,7 +93,7 @@ static void update_text_source(struct lyrics_source *context)
 
 static void load_lyrics_file(struct lyrics_source *context)
 {
-	dstr_array_free(context->current_lyrics);
+	dstr_array_free(&context->current_lyrics);
 	context->current_line_index = 0;
 
 	if (context->files.num == 0 || context->current_file_index < 0 || 
@@ -124,7 +124,7 @@ static void load_lyrics_file(struct lyrics_source *context)
 
 static void refresh_files(struct lyrics_source *context)
 {
-	dstr_array_free(context->files);
+	dstr_array_free(&context->files);
 	
 	if (!context->lyrics_folder || !*context->lyrics_folder)
 		return;
@@ -215,8 +215,8 @@ static void lyrics_destroy(void *data)
 	bfree(context->font_family);
 	bfree(context->font_style);
 	
-	dstr_array_free(context->files);
-	dstr_array_free(context->current_lyrics);
+	dstr_array_free(&context->files);
+	dstr_array_free(&context->current_lyrics);
 	
 	bfree(context);
 }
