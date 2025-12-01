@@ -1,103 +1,59 @@
-# OBS Lyrics Plugin
+# OBS Plugin Template
 
-A powerful OBS Studio plugin for displaying lyrics and presentations with full customization options. Available in both Lua (no dependencies) and Python (with dock UI) versions! This source allows you to display lyrics from text files over a background image, with advanced control over navigation and text styling.
+## Introduction
 
-## Features
+The plugin template is meant to be used as a starting point for OBS Studio plugin development. It includes:
 
-- **Folder-based Song Management**: Load all songs from a folder - each `.txt` file is a separate song
-- **Line-by-Line Display**: Each line in the text file is displayed as a separate slide
-- **Background Images**: Display custom background images behind your lyrics
-- **Full Text Customization**:
-    - **Font Selection**: Choose font face, size, and style
-    - **Text Color**: Full color picker for text
-    - **Text Outline/Border**: Enable outline with customizable color and thickness
-    - **Drop Shadow**: Add shadows with adjustable opacity, offset, and color
-- **Text Box System**: 
-    - Adjustable width and height
-    - Alignment-based positioning (no manual offsets)
-    - Visual bounds indicator for easy setup
-- **Playback Controls**: 
-    - Navigate between lyrics (Previous/Next Lyric)
-    - Stop/Clear current display
-    - Python version includes dock widget
+* Boilerplate plugin source code
+* A CMake project file
+* GitHub Actions workflows and repository actions
 
-## Choose Your Version
+## Supported Build Environments
 
-### Lua Version (Recommended for simplicity)
-- **Location**: `lua_version/` folder
-- **Pros**: No dependencies, works immediately
-- **Features**: All core features, external control script
+| Platform  | Tool   |
+|-----------|--------|
+| Windows   | Visal Studio 17 2022 |
+| macOS     | XCode 16.0 |
+| Windows, macOS  | CMake 3.30.5 |
+| Ubuntu 24.04 | CMake 3.28.3 |
+| Ubuntu 24.04 | `ninja-build` |
+| Ubuntu 24.04 | `pkg-config`
+| Ubuntu 24.04 | `build-essential` |
 
-### Python Version (Recommended for dock UI)
-- **Location**: `python_version/` folder
-- **Pros**: Dock widget UI next to Properties panel
-- **Requires**: Python 3.6+ with PyQt5
+## Quick Start
 
-## Installation
+An absolute bare-bones [Quick Start Guide](https://github.com/obsproject/obs-plugintemplate/wiki/Quick-Start-Guide) is available in the wiki.
 
-### For Lua Version:
-1. Go to Tools → Scripts
-2. Add `lua_version/lyrics_plugin.lua`
-3. (Optional) Add `lua_version/lyrics_controls.lua`
+## Documentation
 
-### For Python Version:
-1. Ensure OBS has Python support
-2. Go to Tools → Scripts
-3. Add `python_version/lyrics_plugin_main.py`
-4. The dock widget appears automatically
+All documentation can be found in the [Plugin Template Wiki](https://github.com/obsproject/obs-plugintemplate/wiki).
 
-## Usage
+Suggested reading to get up and running:
 
-1. **Add the Source**:
-    - In OBS, click the `+` button in the Sources panel.
-    - Select `Lyrics Overlay` from the list.
-    - Name your source and click OK.
+* [Getting started](https://github.com/obsproject/obs-plugintemplate/wiki/Getting-Started)
+* [Build system requirements](https://github.com/obsproject/obs-plugintemplate/wiki/Build-System-Requirements)
+* [Build system options](https://github.com/obsproject/obs-plugintemplate/wiki/CMake-Build-System-Options)
 
-2. **Configure Properties**:
-    - **Background Image**: (Optional) Select an image to display behind the lyrics.
-    - **Songs Folder**: Select a folder containing your `.txt` song files.
-    - **Current Song**: Choose which song to display from the dropdown.
-    - **Text Box**: Set width and height of the text area.
-    - **Text Position**: Choose alignment (left/center/right, top/center/bottom).
-    - **Text Appearance**: Customize font, size, style, and color.
-    - **Text Effects**: Enable and configure outline and shadow effects.
+## GitHub Actions & CI
 
-3. **Control Playback**:
-    - **In Properties**: Use the quick control buttons
-        - **◀ Previous Lyric**: Go to the previous line
-        - **■ Stop/Clear**: Clear the current display
-        - **▶ Next Lyric**: Advance to the next line
-    - **External Control Panel**: Use the separate control script
-        - Song selection dropdown
-        - Playback control buttons
-        - Configurable hotkeys
+Default GitHub Actions workflows are available for the following repository actions:
 
-## File Format
+* `push`: Run for commits or tags pushed to `master` or `main` branches.
+* `pr-pull`: Run when a Pull Request has been pushed or synchronized.
+* `dispatch`: Run when triggered by the workflow dispatch in GitHub's user interface.
+* `build-project`: Builds the actual project and is triggered by other workflows.
+* `check-format`: Checks CMake and plugin source code formatting and is triggered by other workflows.
 
-- Create a folder for your songs/presentations
-- Each `.txt` file in the folder is treated as a separate song or presentation
-- Each line in the text file is displayed as a separate slide
-- Empty lines will display as blank slides
-- UTF-8 encoding is supported for international characters
+The workflows make use of GitHub repository actions (contained in `.github/actions`) and build scripts (contained in `.github/scripts`) which are not needed for local development, but might need to be adjusted if additional/different steps are required to build the plugin.
 
-### Example File Structure:
-```
-songs_folder/
-├── Amazing_Grace.txt
-├── Test_Song.txt
-└── Demo_Presentation.txt
-```
+### Retrieving build artifacts
 
-### Example Song File (Amazing_Grace.txt):
-```
-Amazing Grace, how sweet the sound
-That saved a wretch like me
-I once was lost but now am found
-Was blind, but now I see
-```
+Successful builds on GitHub Actions will produce build artifacts that can be downloaded for testing. These artifacts are commonly simple archives and will not contain package installers or installation programs.
 
-## Troubleshooting
+### Building a Release
 
-- **Text not appearing?** Ensure "Stop/Clear" wasn't clicked. Try clicking "Next Lyric" to advance to the first line.
-- **Songs not showing in dropdown?** Make sure you've selected a valid folder containing .txt files, then click away and back to refresh.
-- **Plugin not loading?** Check the OBS Script Log (Tools → Scripts → Script Log button) for any Lua errors.
+To create a release, an appropriately named tag needs to be pushed to the `main`/`master` branch using semantic versioning (e.g., `12.3.4`, `23.4.5-beta2`). A draft release will be created on the associated repository with generated installer packages or installation programs attached as release artifacts.
+
+## Signing and Notarizing on macOS
+
+Basic concepts of codesigning and notarization on macOS are explained in the correspodning [Wiki article](https://github.com/obsproject/obs-plugintemplate/wiki/Codesigning-On-macOS) which has a specific section for the [GitHub Actions setup](https://github.com/obsproject/obs-plugintemplate/wiki/Codesigning-On-macOS#setting-up-code-signing-for-github-actions).
