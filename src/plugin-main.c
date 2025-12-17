@@ -61,12 +61,12 @@ bool obs_module_load(void)
 		obs_frontend_add_event_callback(on_event, NULL);
 	}
 	
-	obs_log(LOG_INFO, "OBS Lyrics Plugin loaded successfully (version %s)", PLUGIN_VERSION);
+	plugin_log(LOG_INFO, "OBS Lyrics Plugin loaded successfully (version %s)", PLUGIN_VERSION);
 	return true;
 }
 
 void obs_module_unload(void)
 {
 	obs_frontend_remove_event_callback(on_event, NULL);
-	obs_log(LOG_INFO, "OBS Lyrics Plugin unloaded");
+	plugin_log(LOG_INFO, "OBS Lyrics Plugin unloaded");
 }

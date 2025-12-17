@@ -7,7 +7,7 @@
 #include <QPushButton>
 #include <QHBoxLayout>
 
-static bool background_file_filter(obs_properties_t *props, obs_property_t *property, obs_data_t *settings)
+[[maybe_unused]] static bool background_file_filter(obs_properties_t *props, obs_property_t *property, obs_data_t *settings)
 {
     UNUSED_PARAMETER(props);
     UNUSED_PARAMETER(property);
@@ -67,6 +67,7 @@ static bool lyrics_files_clicked(obs_properties_t *props, obs_property_t *proper
 
 static bool use_folder_modified(obs_properties_t *props, obs_property_t *property, obs_data_t *settings)
 {
+    UNUSED_PARAMETER(property);
     bool use_folder = obs_data_get_bool(settings, USE_FOLDER);
     obs_property_t *folder_button = obs_properties_get(props, "folder_button");
     obs_property_t *files_button = obs_properties_get(props, "files_button");
