@@ -12,6 +12,7 @@
 #include <QString>
 #include <QStringList>
 #include <graphics/image-file.h>
+#include <graphics/vec4.h>
 #include <vector>
 #include <cmath>
 
@@ -145,6 +146,78 @@ static void update_text_source(lyrics_source *ls)
 	obs_data_release(settings);
 }
 
+static void unload_background_image(lyrics_source *ls)
+{
+	if (!ls->background_loaded)
+		return;
+
+	obs_enter_graphics();
+	gs_image_file4_free(&ls->background_image);
+	obs_leave_graphics();
+
+	ls->background_loaded = false;
+}
+
+static void load_background_image(lyrics_source *ls)
+{
+	unload_background_image(ls);
+
+	if (!ls->background_file || !*ls->background_file)
+		return;
+
+	gs_image_file4_init(&ls->background_image, ls->background_file, GS_IMAGE_ALPHA_PREMULTIPLY);
+
+	obs_enter_graphics();
+	gs_image_file4_init_texture(&ls->background_image);
+	obs_leave_graphics();
+
+	ls->background_loaded = true;
+}
+
+static void draw_bounds_outline(int x, int y, int w, int h, int thickness, uint32_t rgba)
+{
+	if (w <= 0 || h <= 0 || thickness <= 0)
+		return;
+
+	gs_effect_t *solid = obs_get_base_effect(OBS_EFFECT_SOLID);
+	gs_eparam_t *color_param = gs_effect_get_param_by_name(solid, "color");
+	gs_technique_t *tech = gs_effect_get_technique(solid, "Solid");
+
+	struct vec4 color;
+	vec4_from_rgba(&color, rgba);
+	gs_effect_set_vec4(color_param, &color);
+
+	gs_technique_begin(tech);
+	gs_technique_begin_pass(tech, 0);
+
+	// top
+	gs_matrix_push();
+	gs_matrix_translate3f((float)x, (float)y, 0.0f);
+	gs_draw_sprite(nullptr, 0, w, thickness);
+	gs_matrix_pop();
+
+	// bottom
+	gs_matrix_push();
+	gs_matrix_translate3f((float)x, (float)(y + h - thickness), 0.0f);
+	gs_draw_sprite(nullptr, 0, w, thickness);
+	gs_matrix_pop();
+
+	// left
+	gs_matrix_push();
+	gs_matrix_translate3f((float)x, (float)y, 0.0f);
+	gs_draw_sprite(nullptr, 0, thickness, h);
+	gs_matrix_pop();
+
+	// right
+	gs_matrix_push();
+	gs_matrix_translate3f((float)(x + w - thickness), (float)y, 0.0f);
+	gs_draw_sprite(nullptr, 0, thickness, h);
+	gs_matrix_pop();
+
+	gs_technique_end_pass(tech);
+	gs_technique_end(tech);
+}
+
 const char *lyrics_source_get_name(void *unused)
 {
 	UNUSED_PARAMETER(unused);
@@ -209,8 +282,7 @@ void lyrics_source_destroy(void *data)
 {
 	lyrics_source *ls = (lyrics_source *)data;
 
-	if (ls->background_texture)
-		gs_texture_destroy(ls->background_texture);
+	unload_background_image(ls);
 	if (ls->text_source)
 		obs_source_release(ls->text_source);
 
@@ -235,24 +307,13 @@ void lyrics_source_update(void *data, obs_data_t *settings)
 	const char *background_file = obs_data_get_string(settings, BACKGROUND_FILE);
 	if (ls->background_file && strcmp(ls->background_file, background_file) != 0) {
 		bfree(ls->background_file);
-		ls->background_file = NULL;
-		if (ls->background_texture) {
-			obs_enter_graphics();
-			gs_texture_destroy(ls->background_texture);
-			obs_leave_graphics();
-			ls->background_texture = NULL;
-		}
+		ls->background_file = nullptr;
+		unload_background_image(ls);
 	}
 
 	if (!ls->background_file && background_file && *background_file) {
 		ls->background_file = bstrdup(background_file);
-		gs_image_file_t image;
-		gs_image_file_init(&image, ls->background_file);
-		obs_enter_graphics();
-		gs_image_file_init_texture(&image);
-		ls->background_texture = image.texture;
-		obs_leave_graphics();
-		gs_image_file_free(&image);
+		load_background_image(ls);
 	}
 
 	// Update text properties
@@ -268,8 +329,13 @@ void lyrics_source_update(void *data, obs_data_t *settings)
 	// Update alignment
 	ls->text_h_align = (int)obs_data_get_int(settings, TEXT_H_ALIGN);
 	ls->text_v_align = (int)obs_data_get_int(settings, TEXT_V_ALIGN);
+	ls->text_x = (int)obs_data_get_int(settings, TEXT_X);
+	ls->text_y = (int)obs_data_get_int(settings, TEXT_Y);
 	ls->text_width = (int)obs_data_get_int(settings, TEXT_WIDTH);
 	ls->text_height = (int)obs_data_get_int(settings, TEXT_HEIGHT);
+	ls->show_bounds = obs_data_get_bool(settings, TEXT_SHOW_BOUNDS);
+	ls->bounds_color = (uint32_t)obs_data_get_int(settings, TEXT_BOUNDS_COLOR);
+	ls->bounds_thickness = (int)obs_data_get_int(settings, TEXT_BOUNDS_THICKNESS);
 
 	// Update font
 	const char *font_name = obs_data_get_string(settings, TEXT_FONT_NAME);
@@ -284,7 +350,7 @@ void lyrics_source_update(void *data, obs_data_t *settings)
 	const char *lyrics_folder = obs_data_get_string(settings, LYRICS_FOLDER);
 	if (ls->lyrics_folder)
 		bfree(ls->lyrics_folder);
-	ls->lyrics_folder = bstrdup(lyrics_folder);
+	ls->lyrics_folder = (lyrics_folder && *lyrics_folder) ? bstrdup(lyrics_folder) : nullptr;
 
 	if (ls->lyrics_files)
 		obs_data_array_release(ls->lyrics_files);
@@ -298,33 +364,103 @@ void lyrics_source_render(void *data, gs_effect_t *effect)
 {
 	lyrics_source *ls = (lyrics_source *)data;
 
+	gs_effect_t *draw_effect = effect;
+	if (!draw_effect)
+		draw_effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
+
 	// Render background
-	if (ls->background_texture) {
-		gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), ls->background_texture);
-		gs_draw_sprite(ls->background_texture, 0, gs_texture_get_width(ls->background_texture),
-			       gs_texture_get_height(ls->background_texture));
+	if (ls->background_loaded) {
+		struct gs_image_file *const image = &ls->background_image.image3.image2.image;
+		gs_texture_t *const texture = image->texture;
+		if (texture) {
+			const bool previous = gs_framebuffer_srgb_enabled();
+			gs_enable_framebuffer_srgb(true);
+
+			gs_blend_state_push();
+			gs_blend_function(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA);
+
+			gs_eparam_t *const param = gs_effect_get_param_by_name(draw_effect, "image");
+			gs_effect_set_texture_srgb(param, texture);
+
+			for (gs_effect_loop(draw_effect, "Draw")) {
+				gs_draw_sprite(texture, 0, image->cx, image->cy);
+			}
+
+			gs_blend_state_pop();
+			gs_enable_framebuffer_srgb(previous);
+		}
 	}
 
-	// Render text
+	// Bounds preview overlay
+	if (ls->show_bounds) {
+		draw_bounds_outline(ls->text_x, ls->text_y, ls->text_width, ls->text_height, ls->bounds_thickness,
+				   ls->bounds_color);
+	}
+
+	// Render text translated into position
 	if (ls->text_source) {
+		gs_matrix_push();
+		gs_matrix_translate3f((float)ls->text_x, (float)ls->text_y, 0.0f);
 		obs_source_video_render(ls->text_source);
+		gs_matrix_pop();
 	}
 }
 
 uint32_t lyrics_source_get_width(void *data)
 {
 	lyrics_source *ls = (lyrics_source *)data;
-	if (ls->background_texture)
-		return gs_texture_get_width(ls->background_texture);
+	if (ls->background_loaded && ls->background_image.image3.image2.image.cx > 0)
+		return ls->background_image.image3.image2.image.cx;
 	return 1920; // Default width
 }
 
 uint32_t lyrics_source_get_height(void *data)
 {
 	lyrics_source *ls = (lyrics_source *)data;
-	if (ls->background_texture)
-		return gs_texture_get_height(ls->background_texture);
+	if (ls->background_loaded && ls->background_image.image3.image2.image.cy > 0)
+		return ls->background_image.image3.image2.image.cy;
 	return 1080; // Default height
+}
+
+void lyrics_source_media_play_pause(void *data, bool pause)
+{
+	lyrics_source *ls = (lyrics_source *)data;
+	ls->text_visible = !pause;
+	update_text_source(ls);
+}
+
+void lyrics_source_media_restart(void *data)
+{
+	lyrics_source *ls = (lyrics_source *)data;
+	ls->current_song = 0;
+	ls->current_line = 0;
+	ls->text_visible = true;
+	update_text_source(ls);
+}
+
+void lyrics_source_media_stop(void *data)
+{
+	lyrics_source *ls = (lyrics_source *)data;
+	ls->current_song = 0;
+	ls->current_line = 0;
+	ls->text_visible = false;
+	update_text_source(ls);
+}
+
+void lyrics_source_media_next(void *data)
+{
+	lyrics_source_next(data);
+}
+
+void lyrics_source_media_previous(void *data)
+{
+	lyrics_source_previous(data);
+}
+
+enum obs_media_state lyrics_source_media_get_state(void *data)
+{
+	lyrics_source *ls = (lyrics_source *)data;
+	return ls->text_visible ? OBS_MEDIA_STATE_PLAYING : OBS_MEDIA_STATE_PAUSED;
 }
 
 void lyrics_source_next(void *data)

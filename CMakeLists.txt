@@ -37,7 +37,6 @@ endif()
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE 
     src/plugin-main.c
     src/lyrics-source.cpp
-    src/lyrics-source-properties.cpp
-    src/lyrics-source-toolbar.cpp)
+    src/lyrics-source-properties.cpp)
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})

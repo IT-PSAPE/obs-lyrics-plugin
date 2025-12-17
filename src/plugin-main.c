@@ -28,7 +28,7 @@ OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 static struct obs_source_info lyrics_source_info = {
 	.id = "lyrics_source",
 	.type = OBS_SOURCE_TYPE_INPUT,
-	.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW,
+	.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW | OBS_SOURCE_CONTROLLABLE_MEDIA,
 	.get_name = lyrics_source_get_name,
 	.create = lyrics_source_create,
 	.destroy = lyrics_source_destroy,
@@ -38,6 +38,12 @@ static struct obs_source_info lyrics_source_info = {
 	.get_height = lyrics_source_get_height,
 	.get_properties = lyrics_source_properties,
 	.get_defaults = lyrics_source_get_defaults,
+	.media_play_pause = lyrics_source_media_play_pause,
+	.media_restart = lyrics_source_media_restart,
+	.media_stop = lyrics_source_media_stop,
+	.media_next = lyrics_source_media_next,
+	.media_previous = lyrics_source_media_previous,
+	.media_get_state = lyrics_source_media_get_state,
 	.icon_type = OBS_ICON_TYPE_TEXT,
 };
 

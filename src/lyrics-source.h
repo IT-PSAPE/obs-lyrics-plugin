@@ -1,6 +1,7 @@
 #pragma once
 
 #include <obs-module.h>
+#include <graphics/image-file.h>
 
 #define TEXT_FONT_NAME "font_name"
 #define TEXT_FONT_SIZE "font_size"
@@ -15,8 +16,13 @@
 #define TEXT_SHADOW_COLOR "shadow_color"
 #define TEXT_H_ALIGN "h_align"
 #define TEXT_V_ALIGN "v_align"
+#define TEXT_X "text_x"
+#define TEXT_Y "text_y"
 #define TEXT_WIDTH "text_width"
 #define TEXT_HEIGHT "text_height"
+#define TEXT_SHOW_BOUNDS "show_bounds"
+#define TEXT_BOUNDS_COLOR "bounds_color"
+#define TEXT_BOUNDS_THICKNESS "bounds_thickness"
 #define BACKGROUND_FILE "background_file"
 #define LYRICS_FOLDER "lyrics_folder"
 #define LYRICS_FILES "lyrics_files"
@@ -30,7 +36,8 @@ struct lyrics_source {
 	obs_source_t *source;
 
 	// Background image
-	gs_texture_t *background_texture;
+	gs_image_file4_t background_image;
+	bool background_loaded;
 	char *background_file;
 
 	// Lyrics data - using void* to hide C++ implementation
@@ -56,8 +63,13 @@ struct lyrics_source {
 	// Text positioning
 	int text_h_align; // 0 = left, 1 = center, 2 = right
 	int text_v_align; // 0 = top, 1 = center, 2 = bottom
+	int text_x;
+	int text_y;
 	int text_width;
 	int text_height;
+	bool show_bounds;
+	uint32_t bounds_color;
+	int bounds_thickness;
 
 	// Font settings
 	char *font_name;
@@ -85,6 +97,14 @@ void lyrics_source_get_defaults(obs_data_t *settings);
 void lyrics_source_next(void *data);
 void lyrics_source_previous(void *data);
 void lyrics_source_toggle_text(void *data);
+
+// Media controls (for OBS source toolbar)
+void lyrics_source_media_play_pause(void *data, bool pause);
+void lyrics_source_media_restart(void *data);
+void lyrics_source_media_stop(void *data);
+void lyrics_source_media_next(void *data);
+void lyrics_source_media_previous(void *data);
+enum obs_media_state lyrics_source_media_get_state(void *data);
 
 #ifdef __cplusplus
 }
