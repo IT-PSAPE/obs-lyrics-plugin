@@ -45,7 +45,7 @@ static struct obs_source_info lyrics_source_info = {
 static void on_event(enum obs_frontend_event event, void *data)
 {
 	UNUSED_PARAMETER(data);
-	
+
 	if (event == OBS_FRONTEND_EVENT_FINISHED_LOADING) {
 		// Register toolbar actions when frontend is ready
 		// Note: This requires frontend API support
@@ -55,12 +55,12 @@ static void on_event(enum obs_frontend_event event, void *data)
 bool obs_module_load(void)
 {
 	obs_register_source(&lyrics_source_info);
-	
+
 	// Register frontend event handler if available
 	if (obs_frontend_get_main_window()) {
 		obs_frontend_add_event_callback(on_event, NULL);
 	}
-	
+
 	plugin_log(LOG_INFO, "OBS Lyrics Plugin loaded successfully (version %s)", PLUGIN_VERSION);
 	return true;
 }

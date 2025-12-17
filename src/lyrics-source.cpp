@@ -107,9 +107,9 @@ static void update_text_source(lyrics_source *ls)
 
 	// Shadow
 	obs_data_set_bool(settings, "drop_shadow", ls->shadow_enabled);
-	const int shadow_distance = (int)std::lround(std::sqrt(
-		(double)ls->shadow_offset_x * (double)ls->shadow_offset_x +
-			(double)ls->shadow_offset_y * (double)ls->shadow_offset_y));
+	const int shadow_distance =
+		(int)std::lround(std::sqrt((double)ls->shadow_offset_x * (double)ls->shadow_offset_x +
+					   (double)ls->shadow_offset_y * (double)ls->shadow_offset_y));
 	obs_data_set_int(settings, "shadow_distance", shadow_distance);
 	obs_data_set_int(settings, "shadow_color", ls->shadow_color);
 
